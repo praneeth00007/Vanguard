@@ -97,9 +97,9 @@ function normalizeInputs(input: ProofInput): Record<string, unknown> {
   const normalized: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(input)) {
-    if (typeof value === "boolean") {
-      normalized[key] = value;
-    } else if (typeof value === "string") {
+   if (typeof value === "boolean") {
+      normalized[key] = value ? "1" : "0";
+    }else if (typeof value === "string") {
       normalized[key] = value;
     } else if (typeof value === "number") {
       normalized[key] = value.toString();
@@ -134,22 +134,19 @@ self.onmessage = async (event: MessageEvent<ProofRequest>) => {
     const circuitData = await response.json();
 
     // Initialize the Noir instance with UltraHonk backend
-    const backend = new UltraHonkBackend(circuitData.bytecode);
-    const noir = new Noir(circuitData, backend);
+   const backend = new UltraHonkBackend(circuitData.bytecode);
+   const noir = new Noir(circuitData, backend);
+    await noir.init();
 
-    // Normalize inputs to strings
     const normalizedInput = normalizeInputs(input);
 
-    // Generate the proof
-    // This is the CPU-intensive operation - handled in worker to keep UI responsive
-    const { proof, publicInputs } = await noir.generateProof(normalizedInput);
+  const { proof, publicInputs } = await noir.generateProof(normalizedInput);
 
-    // Verify the proof locally before returning (optional but recommended for debugging)
-    // Note: This verification step can be removed in production to save time
-    const verification = await noir.verifyProof({ proof, publicInputs });
-    if (!verification) {
-      throw new Error("Generated proof failed local verification");
-    }
+  const verification = await noir.verifyProof({ proof, publicInputs });
+  if (!verification) {
+    throw new Error("Generated proof failed local verification");
+  }
+
 
     // Return success response with proof and public inputs
     // The proof contains only the zero-knowledge proof, NOT the salt or private inputs

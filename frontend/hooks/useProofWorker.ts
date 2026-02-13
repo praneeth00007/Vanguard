@@ -1,15 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import type { CircuitType, ProofRequest, ProofResponse } from "@/workers/proofWorker";
 
-type ProofWorkerMessage = {
-  circuit: "movement" | "attack" | "scan";
-  input: Record<string, unknown>;
-};
-
-type ProofWorkerResponse =
-  | { proof: Uint8Array; publicInputs: Uint8Array[] }
-  | { error: string };
+export type { CircuitType, ProofRequest, ProofResponse };
 
 export function useProofWorker() {
   const [isBusy, setIsBusy] = useState(false);
@@ -19,9 +13,9 @@ export function useProofWorker() {
     return new Worker(new URL("../workers/proofWorker.ts", import.meta.url));
   }, []);
 
-  const generateProof = useCallback(
-    (message: ProofWorkerMessage) =>
-      new Promise<ProofWorkerResponse>((resolve, reject) => {
+  const executeCircuit = useCallback(
+    (message: ProofRequest) =>
+      new Promise<ProofResponse>((resolve, reject) => {
         if (!worker) {
           reject(new Error("Worker not available"));
           return;
@@ -29,7 +23,7 @@ export function useProofWorker() {
 
         setIsBusy(true);
 
-        worker.onmessage = (event: MessageEvent<ProofWorkerResponse>) => {
+        worker.onmessage = (event: MessageEvent<ProofResponse>) => {
           setIsBusy(false);
           if ("error" in event.data) {
             reject(new Error(event.data.error));
@@ -48,5 +42,5 @@ export function useProofWorker() {
     [worker]
   );
 
-  return { generateProof, isBusy };
+  return { executeCircuit, isBusy };
 }
