@@ -1,15 +1,22 @@
-# Example inputs for attack circuit testing
-# Private inputs - defender's actual position
-x = "7"
-y = "2"
+# Example inputs for attack circuit
+# This circuit proves hit/miss without revealing defender's position
+
+# Private inputs: defender's actual position
+x = "3"
+y = "5"
+
+# Private input: defender's secret salt
 salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
-# Public inputs
-# commitment = Poseidon(7, 2, salt)
-# In practice, this would be computed and provided
-commitment = "0"
-target_x = "7"
-target_y = "2"
+# Public inputs: defender's commitment and attacker's target
+# commitment = Poseidon(3, 5, salt)
+# TODO: Compute actual hash value before running nargo execute
+commitment = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
-# Public output - should be true for this example (hit)
-hit = true
+# Attacker's target coordinates (public)
+target_x = "3"
+target_y = "5"
+
+# Expected output: true (HIT)
+# Because defender is at (3, 5) and attacker targets (3, 5)
+# If target was different, output would be false (MISS)

@@ -1,14 +1,22 @@
-# Example inputs for movement circuit testing
-# Private inputs
+# Example inputs for movement circuit
+# This circuit proves valid unit movement without revealing coordinates
+
+# Private inputs: old and new positions
 old_x = "3"
 old_y = "5"
 new_x = "4"
 new_y = "6"
+
+# Private input: secret salt (same for both positions)
 salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
-# Public inputs (these would be computed from the private inputs)
+# Public inputs: commitments stored on-chain
 # old_hash = Poseidon(3, 5, salt)
 # new_hash = Poseidon(4, 6, salt)
-# In practice, these would be computed and provided
-old_hash = "0"
-new_hash = "0"
+# TODO: Compute actual hash values before running nargo execute
+old_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+new_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+# This move is valid because:
+# Manhattan distance = |4-3| + |6-5| = 1 + 1 = 2 ✓
+# All coordinates in [0, 9] range ✓

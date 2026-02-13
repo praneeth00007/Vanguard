@@ -1,4 +1,4 @@
-use std::hash::poseidon2;
+use dep::std::hash::poseidon;
 
 // Deployment circuit for Vanguard's Blindside
 // Proves initial unit placement is valid without revealing coordinates
@@ -12,14 +12,14 @@ fn main(
     salt: Field,
     
     // Public input - commitment to be stored on-chain
-    commitment: pub Field
+    pub commitment: pub Field
 ) {
     // Constraint 1: Verify commitment
     // commitment must equal Poseidon(x, y, salt)
-    let computed_hash = poseidon2::Poseidon2::hash([x, y, salt], 3);
+    let computed_hash = poseidon::bn254::hash_3([x, y, salt]);
     assert(computed_hash == commitment, "Commitment mismatch");
     
     // Constraint 2: Verify grid bounds (0-9 for 10x10 grid)
-    assert(x as u32 <= 9, "X coordinate out of bounds");
-    assert(y as u32 <= 9, "Y coordinate out of bounds");
+    assert(x.lt(10), "X coordinate out of bounds");
+    assert(y.lt(10), "Y coordinate out of bounds");
 }

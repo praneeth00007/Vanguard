@@ -1,10 +1,15 @@
 # Example inputs for deployment circuit testing
+# This circuit proves initial unit placement is valid without revealing coordinates
+
 # Private inputs - player's initial position
 x = "3"
 y = "5"
+
+# Private input: secret salt (32-byte hex value)
+# MUST be cryptographically random and kept secret
 salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
-# Public input
+# Public input: commitment to be stored on-chain
 # commitment = Poseidon(3, 5, salt)
-# In practice, this would be computed from the private inputs
-commitment = "0"
+# TODO: Compute actual hash value before running nargo execute
+commitment = "0x0000000000000000000000000000000000000000000000000000000000000000"
