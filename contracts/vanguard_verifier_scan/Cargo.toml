@@ -1,0 +1,17 @@
+[package]
+name = "vanguard_verifier_scan"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+ark-bn254 = "0.4"
+ark-ff = "0.4"
+soroban-sdk = "21.0.0-preview.3"
+ultrahonk-rust-verifier = "0.2.0"
+
+[dev-dependencies]
+soroban-sdk = { version = "21.0.0-preview.3", features = ["testutils"] }

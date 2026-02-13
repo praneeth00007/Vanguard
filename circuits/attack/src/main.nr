@@ -1,7 +1,7 @@
 use dep::std::hash::poseidon;
 
 fn main(
-    // Private inputs
+    // Private inputs (witnesses)
     attacker_x: u8,
     attacker_y: u8,
     attacker_salt: Field,
@@ -9,14 +9,14 @@ fn main(
     defender_y: u8,
     defender_salt: Field,
     // Public inputs
-    pub attacker_hash: Field,
-    pub defender_hash: Field,
-    pub target_x: u8,
-    pub target_y: u8,
-    pub vehicle_type: u8,
-    pub action_type: u8,
-    pub turn_counter: u32,
-    pub claimed_hit: bool,
+    attacker_hash: Field,
+    defender_hash: Field,
+    target_x: u8,
+    target_y: u8,
+    vehicle_type: u8,
+    action_type: u8,
+    turn_counter: u32,
+    claimed_hit: bool,
 ) {
     assert(vehicle_type <= 2, "invalid vehicle_type");
     assert(action_type == 1, "invalid action_type");
