@@ -4,7 +4,7 @@ export const VEHICLES: VehicleSpec[] = [
   {
     id: "cycle",
     name: "Cycle",
-    description: "Fast scout with short attack range and quick turns.",
+    description: "Fast scout with short attack range. Can scan 2x2 areas to detect enemies.",
     movementRange: 3,
     attackRange: 2,
     cooldownAfterAttack: 0,
@@ -13,7 +13,7 @@ export const VEHICLES: VehicleSpec[] = [
   {
     id: "rover",
     name: "Rover",
-    description: "Balanced mover with mid-range attacks.",
+    description: "Balanced striker with mid-range attacks and no cooldown. Versatile and reliable.",
     movementRange: 2,
     attackRange: 3,
     cooldownAfterAttack: 0,
@@ -22,7 +22,7 @@ export const VEHICLES: VehicleSpec[] = [
   {
     id: "tank",
     name: "Tank",
-    description: "Slow mover with wide attack range and cooldown.",
+    description: "Heavy hitter with wide attack range. Powerful but requires 1 turn cooldown after attacking.",
     movementRange: 1,
     attackRange: 4,
     cooldownAfterAttack: 1,
