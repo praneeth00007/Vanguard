@@ -1,22 +1,32 @@
 # Example inputs for attack circuit
-# This circuit proves hit/miss without revealing defender's position
+# This circuit proves hit/miss and attack range without revealing positions
 
-# Private inputs: defender's actual position
-x = "3"
-y = "5"
+# Private inputs: attacker position
+attacker_x = "2"
+attacker_y = "4"
+attacker_salt = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
 
-# Private input: defender's secret salt
-salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+# Private inputs: defender position
+defender_x = "3"
+defender_y = "5"
+defender_salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
-# Public inputs: defender's commitment and attacker's target
-# commitment = Poseidon(3, 5, salt)
-# TODO: Compute actual hash value before running nargo execute
-commitment = "0x0000000000000000000000000000000000000000000000000000000000000000"
+# Public inputs: commitments
+# attacker_hash = Poseidon(2, 4, attacker_salt)
+# defender_hash = Poseidon(3, 5, defender_salt)
+# TODO: Compute actual hash values before running nargo execute
+attacker_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+defender_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
 # Attacker's target coordinates (public)
 target_x = "3"
 target_y = "5"
 
+# Public inputs: game context
+vehicle_type = "0" # Cycle
+action_type = "1"  # Attack
+turn_counter = "2"
+claimed_hit = "true"
+
 # Expected output: true (HIT)
 # Because defender is at (3, 5) and attacker targets (3, 5)
-# If target was different, output would be false (MISS)

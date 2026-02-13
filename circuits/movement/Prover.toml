@@ -17,6 +17,11 @@ salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 old_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 new_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
 
+# Public inputs: game context
+vehicle_type = "1" # Rover
+action_type = "0"  # Move
+turn_counter = "1"
+
 # This move is valid because:
 # Manhattan distance = |4-3| + |6-5| = 1 + 1 = 2 ✓
 # All coordinates in [0, 9] range ✓
