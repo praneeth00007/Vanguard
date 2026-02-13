@@ -4,7 +4,7 @@
 //!
 //! Game logic hub for Vanguard's Blindside ZK game.
 //! Manages game state, commitments, HP, vehicle types, cooldowns, and turn order.
-//! Coordinates with vanguard_verifier for proof validation.
+//! Coordinates with separate verifier contracts for each action type (movement, attack, scan).
 
 use soroban_sdk::{
     contract, contractimpl, contracttype, symbol_short, vec, Address, Bytes, Env, IntoVal, Symbol,
@@ -39,6 +39,10 @@ pub enum DataKey {
     TurnCounter,
     /// Game active flag
     GameActive,
+    /// Verifier contract addresses
+    MovementVerifier,
+    AttackVerifier,
+    ScanVerifier,
 }
 
 /// Player identifiers
@@ -91,6 +95,9 @@ impl VanguardHubContract {
     /// * `p2` - Address of player 2
     /// * `p1_vehicle_type` - Vehicle type for player 1 (0-2)
     /// * `p2_vehicle_type` - Vehicle type for player 2 (0-2)
+    /// * `movement_verifier` - Address of movement verifier contract
+    /// * `attack_verifier` - Address of attack verifier contract
+    /// * `scan_verifier` - Address of scan verifier contract
     ///
     /// # Requirements
     /// * Game must not already be initialized
@@ -104,12 +111,16 @@ impl VanguardHubContract {
     /// * Cooldowns to 0
     /// * Turn counter to 0
     /// * Game active to true
+    /// * Verifier contract addresses
     pub fn initialize_game(
         env: Env,
         p1: Address,
         p2: Address,
         p1_vehicle_type: u32,
         p2_vehicle_type: u32,
+        movement_verifier: Address,
+        attack_verifier: Address,
+        scan_verifier: Address,
     ) {
         // Check game is not already initialized
         if Self::get_game_active(&env) {
@@ -139,6 +150,17 @@ impl VanguardHubContract {
         env.storage()
             .instance()
             .set(&DataKey::P2VehicleType, &p2_vehicle_type);
+
+        // Store verifier contract addresses
+        env.storage()
+            .instance()
+            .set(&DataKey::MovementVerifier, &movement_verifier);
+        env.storage()
+            .instance()
+            .set(&DataKey::AttackVerifier, &attack_verifier);
+        env.storage()
+            .instance()
+            .set(&DataKey::ScanVerifier, &scan_verifier);
 
         // Initialize cooldowns
         env.storage().instance().set(&DataKey::P1Cooldown, &0u32);
@@ -188,7 +210,6 @@ impl VanguardHubContract {
     ///
     /// # Arguments
     /// * `player` - Player address making the move
-    /// * `verifier` - Address of vanguard_verifier contract
     /// * `proof` - UltraHonk proof bytes
     /// * `public_inputs` - Public inputs for the movement circuit
     ///
@@ -198,7 +219,7 @@ impl VanguardHubContract {
     /// * [2] vehicle_type (32 bytes) - Vehicle type
     /// * [3] action_type (32 bytes) - Must be 0 (move)
     /// * [4] turn_counter (32 bytes) - Current turn counter (replay prevention)
-    pub fn move_unit(env: Env, player: Address, verifier: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
+    pub fn move_unit(env: Env, player: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
         Self::require_game_active(&env);
 
         // Get current turn
@@ -273,8 +294,11 @@ impl VanguardHubContract {
             panic!("New hash must differ from old hash");
         }
 
-        // Verify proof using vanguard_verifier contract
-        let is_valid = Self::verify_proof(&env, verifier, proof, public_inputs);
+        // Get movement verifier from storage
+        let movement_verifier = env.storage().instance().get(&DataKey::MovementVerifier).unwrap();
+
+        // Verify proof using movement verifier contract
+        let is_valid = Self::verify_proof(&env, movement_verifier, proof, public_inputs);
         if !is_valid {
             panic!("Invalid proof");
         }
@@ -306,7 +330,6 @@ impl VanguardHubContract {
     ///
     /// # Arguments
     /// * `attacker` - Attacker's address
-    /// * `verifier` - Address of vanguard_verifier contract
     /// * `proof` - UltraHonk proof bytes
     /// * `public_inputs` - Public inputs for the attack circuit
     ///
@@ -319,7 +342,7 @@ impl VanguardHubContract {
     /// * [5] action_type (32 bytes) - Must be 1 (attack)
     /// * [6] turn_counter (32 bytes) - Current turn counter (replay prevention)
     /// * [7] claimed_hit (32 bytes) - Hit result (1 = HIT, 0 = MISS)
-    pub fn attack(env: Env, attacker: Address, verifier: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
+    pub fn attack(env: Env, attacker: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
         Self::require_game_active(&env);
 
         // Get current turn
@@ -421,8 +444,11 @@ impl VanguardHubContract {
             panic!("Defender hash does not match stored commitment");
         }
 
-        // Verify proof using vanguard_verifier contract
-        let is_valid = Self::verify_proof(&env, verifier, proof, public_inputs);
+        // Get attack verifier from storage
+        let attack_verifier = env.storage().instance().get(&DataKey::AttackVerifier).unwrap();
+
+        // Verify proof using attack verifier contract
+        let is_valid = Self::verify_proof(&env, attack_verifier, proof, public_inputs);
         if !is_valid {
             panic!("Invalid proof");
         }
@@ -491,7 +517,6 @@ impl VanguardHubContract {
     ///
     /// # Arguments
     /// * `scanner` - Scanner's address (must be Cycle)
-    /// * `verifier` - Address of vanguard_verifier contract
     /// * `proof` - UltraHonk proof bytes
     /// * `public_inputs` - Public inputs for the scan circuit
     ///
@@ -510,7 +535,7 @@ impl VanguardHubContract {
     /// * Only Cycle can scan
     /// * Proof verifies if defender is in the 2x2 scan area
     /// * Coordinates are never stored on-chain
-    pub fn scan(env: Env, scanner: Address, verifier: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
+    pub fn scan(env: Env, scanner: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
         Self::require_game_active(&env);
 
         // Get current turn
@@ -602,8 +627,11 @@ impl VanguardHubContract {
             panic!("Defender hash does not match stored commitment");
         }
 
-        // Verify proof using vanguard_verifier contract
-        let is_valid = Self::verify_proof(&env, verifier, proof, public_inputs);
+        // Get scan verifier from storage
+        let scan_verifier = env.storage().instance().get(&DataKey::ScanVerifier).unwrap();
+
+        // Verify proof using scan verifier contract
+        let is_valid = Self::verify_proof(&env, scan_verifier, proof, public_inputs);
         if !is_valid {
             panic!("Invalid proof");
         }
