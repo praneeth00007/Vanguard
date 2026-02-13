@@ -8,6 +8,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = "22.0.0"
+ultrahonk-rust-verifier = { git = "https://github.com/yugocabrio/ultrahonk-rust-verifier", branch = "soroban-compatible" }
+ark-bn254 = { version = "0.4", default-features = false }
+ark-ff = { version = "0.4", default-features = false }
 
 [dev-dependencies]
 soroban-sdk = { version = "22.0.0", features = ["testutils"] }
