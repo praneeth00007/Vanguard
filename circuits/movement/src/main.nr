@@ -1,18 +1,18 @@
 use dep::std::hash::poseidon;
 
 fn main(
-    // Private inputs
+    // Private inputs (witnesses)
     old_x: u8,
     old_y: u8,
     new_x: u8,
     new_y: u8,
     salt: Field,
     // Public inputs
-    pub old_hash: Field,
-    pub new_hash: Field,
-    pub vehicle_type: u8,
-    pub action_type: u8,
-    pub turn_counter: u32,
+    old_hash: Field,
+    new_hash: Field,
+    vehicle_type: u8,
+    action_type: u8,
+    turn_counter: u32,
 ) {
     // Action + vehicle validation
     assert(vehicle_type <= 2, "invalid vehicle_type");

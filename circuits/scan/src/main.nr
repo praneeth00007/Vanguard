@@ -1,7 +1,7 @@
 use dep::std::hash::poseidon;
 
 fn main(
-    // Private inputs
+    // Private inputs (witnesses)
     scanner_x: u8,
     scanner_y: u8,
     scanner_salt: Field,
@@ -9,14 +9,14 @@ fn main(
     defender_y: u8,
     defender_salt: Field,
     // Public inputs
-    pub scanner_hash: Field,
-    pub defender_hash: Field,
-    pub scan_x: u8,
-    pub scan_y: u8,
-    pub vehicle_type: u8,
-    pub action_type: u8,
-    pub turn_counter: u32,
-    pub claimed_scan_hit: bool,
+    scanner_hash: Field,
+    defender_hash: Field,
+    scan_x: u8,
+    scan_y: u8,
+    vehicle_type: u8,
+    action_type: u8,
+    turn_counter: u32,
+    claimed_scan_hit: bool,
 ) {
     assert(vehicle_type == 0, "scan only allowed for Cycle");
     assert(action_type == 2, "invalid action_type");
