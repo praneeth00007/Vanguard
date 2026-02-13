@@ -24,6 +24,19 @@ export type AttackProofInput = {
   claimedHit: boolean;
 };
 
+export type ScanProofInput = {
+  scannerPosition: Coordinate;
+  defenderPosition: Coordinate;
+  scannerSalt: string;
+  defenderSalt: string;
+  scannerHash: string;
+  defenderHash: string;
+  scanOrigin: Coordinate;
+  vehicleId: VehicleId;
+  turnCounter: number;
+  claimedScanHit: boolean;
+};
+
 export function buildMovementInput(input: MovementProofInput) {
   const vehicle = VEHICLE_BY_ID[input.vehicleId];
   return {
@@ -57,5 +70,25 @@ export function buildAttackInput(input: AttackProofInput) {
     action_type: 1,
     turn_counter: input.turnCounter,
     claimed_hit: input.claimedHit,
+  };
+}
+
+export function buildScanInput(input: ScanProofInput) {
+  const vehicle = VEHICLE_BY_ID[input.vehicleId];
+  return {
+    scanner_x: input.scannerPosition.x,
+    scanner_y: input.scannerPosition.y,
+    scanner_salt: input.scannerSalt,
+    defender_x: input.defenderPosition.x,
+    defender_y: input.defenderPosition.y,
+    defender_salt: input.defenderSalt,
+    scanner_hash: input.scannerHash,
+    defender_hash: input.defenderHash,
+    scan_x: input.scanOrigin.x,
+    scan_y: input.scanOrigin.y,
+    vehicle_type: vehicle.contractType,
+    action_type: 2,
+    turn_counter: input.turnCounter,
+    claimed_scan_hit: input.claimedScanHit,
   };
 }

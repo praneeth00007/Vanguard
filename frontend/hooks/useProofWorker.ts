@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 type ProofWorkerMessage = {
-  circuit: "movement" | "attack";
+  circuit: "movement" | "attack" | "scan";
   input: Record<string, unknown>;
 };
 
