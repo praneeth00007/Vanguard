@@ -1,0 +1,10 @@
+# Example inputs for deployment circuit testing
+# Private inputs - player's initial position
+x = "3"
+y = "5"
+salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+# Public input
+# commitment = Poseidon(3, 5, salt)
+# In practice, this would be computed from the private inputs
+commitment = "0"

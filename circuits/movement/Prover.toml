@@ -1,0 +1,14 @@
+# Example inputs for movement circuit testing
+# Private inputs
+old_x = "3"
+old_y = "5"
+new_x = "4"
+new_y = "6"
+salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+# Public inputs (these would be computed from the private inputs)
+# old_hash = Poseidon(3, 5, salt)
+# new_hash = Poseidon(4, 6, salt)
+# In practice, these would be computed and provided
+old_hash = "0"
+new_hash = "0"

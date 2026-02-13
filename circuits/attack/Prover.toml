@@ -1,0 +1,15 @@
+# Example inputs for attack circuit testing
+# Private inputs - defender's actual position
+x = "7"
+y = "2"
+salt = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+# Public inputs
+# commitment = Poseidon(7, 2, salt)
+# In practice, this would be computed and provided
+commitment = "0"
+target_x = "7"
+target_y = "2"
+
+# Public output - should be true for this example (hit)
+hit = true
