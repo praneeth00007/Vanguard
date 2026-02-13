@@ -66,6 +66,13 @@ pub struct AttackEvent {
     pub turn: u64,
 }
 
+/// Event emitted when a scan is executed
+#[contracttype]
+pub struct ScanEvent {
+    pub scanner: u32,
+    pub turn: u64,
+}
+
 /// Event emitted when game ends
 #[contracttype]
 pub struct GameOverEvent {
@@ -475,6 +482,143 @@ impl VanguardHubContract {
             AttackEvent {
                 attacker: attacker_id,
                 hit,
+                turn: current_turn_counter,
+            },
+        );
+    }
+
+    /// Scan 2x2 area with ZK proof validation.
+    ///
+    /// # Arguments
+    /// * `scanner` - Scanner's address (must be Cycle)
+    /// * `verifier` - Address of vanguard_verifier contract
+    /// * `proof` - UltraHonk proof bytes
+    /// * `public_inputs` - Public inputs for the scan circuit
+    ///
+    /// # Scan Circuit Public Inputs
+    /// * [0] scanner_hash (32 bytes) - Scanner's commitment
+    /// * [1] defender_hash (32 bytes) - Defender's commitment
+    /// * [2] scan_x (32 bytes) - Top-left X coordinate of 2x2 area
+    /// * [3] scan_y (32 bytes) - Top-left Y coordinate of 2x2 area
+    /// * [4] vehicle_type (32 bytes) - Vehicle type (must be 0 for Cycle)
+    /// * [5] action_type (32 bytes) - Must be 2 (scan)
+    /// * [6] turn_counter (32 bytes) - Current turn counter (replay prevention)
+    /// * [7] claimed_scan_hit (32 bytes) - Scan result (1 = enemy detected, 0 = not detected)
+    ///
+    /// # Notes
+    /// * Scan is info-only, does not modify game state
+    /// * Only Cycle can scan
+    /// * Proof verifies if defender is in the 2x2 scan area
+    /// * Coordinates are never stored on-chain
+    pub fn scan(env: Env, scanner: Address, verifier: Address, proof: Bytes, public_inputs: Vec<Bytes>) {
+        Self::require_game_active(&env);
+
+        // Get current turn
+        let current_turn_counter = Self::get_turn_counter(&env);
+        let current_turn = Self::turn_from_counter(current_turn_counter);
+        let scanner_id = Self::get_player_id(&env, scanner);
+
+        // Must be scanner's turn
+        if scanner_id != current_turn {
+            panic!("Not scanner's turn");
+        }
+
+        // Validate public inputs count
+        if public_inputs.len() != 8 {
+            panic!("Expected 8 public inputs: scanner_hash, defender_hash, scan_x, scan_y, vehicle_type, action_type, turn_counter, claimed_scan_hit");
+        }
+
+        let scanner_hash = public_inputs.get(0).unwrap();
+        let defender_hash = public_inputs.get(1).unwrap();
+        let _scan_x = public_inputs.get(2).unwrap();
+        let _scan_y = public_inputs.get(3).unwrap();
+        let vehicle_type_input = public_inputs.get(4).unwrap();
+        let action_type_input = public_inputs.get(5).unwrap();
+        let turn_counter_input = public_inputs.get(6).unwrap();
+        let _claimed_scan_hit_input = public_inputs.get(7).unwrap();
+
+        // Validate input sizes
+        if scanner_hash.len() != 32
+            || defender_hash.len() != 32
+            || _scan_x.len() != 32
+            || _scan_y.len() != 32
+            || vehicle_type_input.len() != 32
+            || action_type_input.len() != 32
+            || turn_counter_input.len() != 32
+            || _claimed_scan_hit_input.len() != 32
+        {
+            panic!("Public inputs must be 32 bytes each");
+        }
+
+        let vehicle_type = Self::bytes_to_u32(&vehicle_type_input);
+        let action_type = Self::bytes_to_u32(&action_type_input);
+        let proof_turn_counter = Self::bytes_to_u32(&turn_counter_input);
+
+        // Enforce that only Cycle can scan
+        if vehicle_type != VEHICLE_CYCLE {
+            panic!("Scan is only allowed for Cycle (vehicle_type must be 0)");
+        }
+
+        if action_type != 2 {
+            panic!("Invalid action type for scan (must be 2)");
+        }
+
+        // Prevent replay: turn counter must match
+        if proof_turn_counter as u64 != current_turn_counter {
+            panic!("Invalid turn counter (possible replay attack)");
+        }
+
+        // Verify vehicle type matches stored
+        let stored_vehicle_type = Self::get_player_vehicle_type(&env, scanner_id);
+        if stored_vehicle_type != vehicle_type {
+            panic!("Vehicle type mismatch");
+        }
+
+        // Determine defender
+        let defender_id = if scanner_id == PLAYER_1 { PLAYER_2 } else { PLAYER_1 };
+
+        // Verify commitments match stored state
+        let stored_scanner_hash = match scanner_id {
+            PLAYER_1 => Self::get_p1_hash(&env),
+            PLAYER_2 => Self::get_p2_hash(&env),
+            _ => panic!("Invalid player"),
+        };
+
+        let stored_defender_hash = match defender_id {
+            PLAYER_1 => Self::get_p1_hash(&env),
+            PLAYER_2 => Self::get_p2_hash(&env),
+            _ => panic!("Invalid player"),
+        };
+
+        if stored_scanner_hash.len() == 0 || stored_defender_hash.len() == 0 {
+            panic!("Both players must commit positions first");
+        }
+
+        if scanner_hash != stored_scanner_hash {
+            panic!("Scanner hash does not match stored commitment");
+        }
+
+        if defender_hash != stored_defender_hash {
+            panic!("Defender hash does not match stored commitment");
+        }
+
+        // Verify proof using vanguard_verifier contract
+        let is_valid = Self::verify_proof(&env, verifier, proof, public_inputs);
+        if !is_valid {
+            panic!("Invalid proof");
+        }
+
+        // Decrement cooldowns for the turn
+        Self::decrement_cooldowns(&env);
+
+        // Increment turn counter (prevents replay of old proofs)
+        env.storage().instance().set(&DataKey::TurnCounter, &(current_turn_counter + 1));
+
+        // Emit scan event
+        env.events().publish(
+            (symbol_short!("scan"),),
+            ScanEvent {
+                scanner: scanner_id,
                 turn: current_turn_counter,
             },
         );
