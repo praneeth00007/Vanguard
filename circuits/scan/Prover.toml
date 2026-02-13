@@ -1,0 +1,29 @@
+# Example inputs for scan circuit
+# This circuit proves scan detection without revealing positions
+
+# Private inputs: scanner position
+scanner_x = "1"
+scanner_y = "1"
+scanner_salt = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+# Private inputs: defender position
+defender_x = "2"
+defender_y = "2"
+defender_salt = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+# Public inputs: commitments
+# scanner_hash = Poseidon(1, 1, scanner_salt)
+# defender_hash = Poseidon(2, 2, defender_salt)
+# TODO: Compute actual hash values before running nargo execute
+scanner_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+defender_hash = "0x0000000000000000000000000000000000000000000000000000000000000000"
+
+# Scan origin (top-left of 2x2 area)
+scan_x = "1"
+scan_y = "1"
+
+# Public inputs: game context
+vehicle_type = "0" # Cycle only
+action_type = "2"  # Scan
+turn_counter = "3"
+claimed_scan_hit = "true"
